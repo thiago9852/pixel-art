@@ -1,0 +1,2 @@
+from generated import canvas_pb2
+from generated import canvas_pb2_grpc
