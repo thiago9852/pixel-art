@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - pixel-net
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pixelart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pixel-net
+
+  core-service:
+    build: ./core-service
+    command: python main.py
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=postgres
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=pixelart
+    ports:
+      - "50051:50051"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - pixel-net
+
+  gateway:
+    build: ./gateway
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    environment:
+      - REDIS_HOST=redis
+      - CORE_SERVICE_HOST=core-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - core-service
+    networks:
+      - pixel-net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - gateway
+    networks:
+      - pixel-net
+
+networks:
+  pixel-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

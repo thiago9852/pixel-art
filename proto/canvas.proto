@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package canvas;
+
+service CanvasService {
+  rpc GetCanvas (ViewportRequest) returns (CanvasState);
+  rpc UpdatePixel (PixelUpdate) returns (UpdateResponse);
+}
+
+message ViewportRequest {
+  int32 min_x = 1;
+  int32 min_y = 2;
+  int32 max_x = 3;
+  int32 max_y = 4;
+}
+
+message Empty {}
+
+message Pixel {
+  int32 x = 1;
+  int32 y = 2;
+  string color = 3;
+}
+
+message CanvasState {
+  repeated Pixel pixels = 1;
+}
+
+message PixelUpdate {
+  int32 x = 1;
+  int32 y = 2;
+  string color = 3;
+}
+
+message UpdateResponse {
+  bool success = 1;
+  string message = 2;
+}
