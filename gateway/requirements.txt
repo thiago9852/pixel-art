@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+websockets
+grpcio
+redis
+protobuf
