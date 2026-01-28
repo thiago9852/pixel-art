@@ -1,0 +1,32 @@
+footer {
+    padding: 5px 20px;
+    background: #1a1a1a;
+    color: #888;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    font-size: 0.75rem;
+    z-index: 1000;
+    border-top: 1px solid #333;
+}
+
+.info-footer {
+    background: #222;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #00ff00;
+    font-family: monospace;
+    min-width: 200px;
+    text-align: center;
+}
+
+.github {
+    color: #888;
+    text-decoration: none;
+}
+
+.discord {
+    color: #5865F2;
+    text-decoration: none;
+    font-weight: bold;
+}
