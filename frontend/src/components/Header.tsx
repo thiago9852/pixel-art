@@ -1,7 +1,7 @@
 import React from "react";
 import "./Header.css";
 
-const Header = ({ palette, selectedColor, setSelectedColor }) => {
+const Header = ({ palette, selectedColor, setSelectedColor, onlineCount }) => {
   return (
     <header>
       {/* Logo */}
@@ -26,7 +26,7 @@ const Header = ({ palette, selectedColor, setSelectedColor }) => {
 
       {/* Status */}
       <div className="status">
-        <span style={{ color: "#00d1b2" }}>●</span> Online: 124
+        <span style={{ color: "#00d1b2" }}>●</span> Online: {onlineCount || 0}
       </div>
     </header>
   );

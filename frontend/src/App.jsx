@@ -23,6 +23,7 @@ function App() {
   const pixelsRef = useRef({});
   const canvasRef = useRef(null);
   const [cursorPos, setCursorPos] = useState({ lat: 0, lng: 0 });
+  const [onlineCount, setOnlineCount] = useState(1);
   
   // Conexão WebSocket
   useEffect(() => {
@@ -30,7 +31,11 @@ function App() {
     
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === "init") {
+      
+      if (msg.type === "stats") {
+        setOnlineCount(msg.online);
+      } 
+      else if (msg.type === "init") {
         msg.data.forEach(p => {
           pixelsRef.current[`${p.x}:${p.y}`] = p.color;
         });
@@ -71,6 +76,7 @@ function App() {
         palette={PALETTE}
         selectedColor={selectedColor}
         setSelectedColor={setSelectedColor}
+        onlineCount={onlineCount}
        />
 
 

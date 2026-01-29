@@ -1,28 +1,40 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-import grpc
-import redis.asyncio as redis
+import os
 import json
 import asyncio
-import os
+import logging
+import grpc
+import redis.asyncio as redis
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 
+# Importações do gRPC
 from generated import canvas_pb2
 from generated import canvas_pb2_grpc
 
-app = FastAPI()
+# Configuração de Logs
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Configuração CORS (Para React Frontend)
+app = FastAPI(title="Pixel Art Gateway")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[], 
+    allow_origins=[],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     allow_origin_regex="https?://.*",
 )
 
-CORE_SERVICE_HOST = os.getenv("CORE_SERVICE_HOST", "localhost:50051")
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+CORE_HOST = os.getenv("CORE_SERVICE_HOST", "core-service")
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+
+# Garante a porta do gRPC do Core
+CORE_TARGET = f"{CORE_HOST}:50051" if ":" not in CORE_HOST else CORE_HOST
+
+# Variáveis Globais
+redis_client = None
+stub = None
 
 class ConnectionManager:
     def __init__(self):
@@ -31,88 +43,93 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        logger.info(f"Cliente conectado. Total: {len(self.active_connections)}")
+
+        await self.broadcast_stats() # Avisar todos que entrar
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
-       
         for connection in self.active_connections[:]:
             try:
                 await connection.send_text(message)
             except Exception:
-                
-                self.disconnect(connection)
+                if connection in self.active_connections:
+                    self.active_connections.remove(connection)
+    
+    async def broadcast_stats(self):
+        count = len(self.active_connections)
+        message = json.dumps({"type": "stats", "online": count})
+        await self.broadcast(message)
 
 manager = ConnectionManager()
 
-# Variáveis Globais
-redis_client = None
-grpc_channel = None
-stub = None
-
 async def redis_listener():
-    global redis_client
-    pubsub = redis_client.pubsub()
-    await pubsub.subscribe("canvas_updates")
-
     try:
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe("canvas_updates")
+        logger.info("Escutando canal 'canvas_updates' no Redis...")
+        
         while True:
-            message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-            
-            if message and message['type'] == 'message':
-                await manager.broadcast(message['data'])
-            
+            msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+            if msg and msg['type'] == 'message':
+                await manager.broadcast(msg['data'])
             await asyncio.sleep(0.01)
     except asyncio.CancelledError:
-        print("Redis Listener desligado.")
+        logger.info("Redis listener desligado.")
     except Exception as e:
-        print(f"Erro no Redis Listener: {e}")
-
+        logger.error(f"Erro no listener do Redis: {e}")
 
 @app.on_event("startup")
-async def startup_event():
-    global redis_client, grpc_channel, stub
+async def startup():
+    global redis_client, stub
+    logger.info("Iniciando Gateway...")
+    
+    # 1. Conecta Redis
+    try:
+        redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+        await redis_client.ping()
+        logger.info(f"Conectado ao Redis em {REDIS_HOST}")
+        asyncio.create_task(redis_listener())
+    except Exception as e:
+        logger.critical(f"Falha ao conectar no Redis: {e}")
 
-    redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
-
-    asyncio.create_task(redis_listener())
-
-    grpc_channel = grpc.aio.insecure_channel(CORE_SERVICE_HOST)
-    stub = canvas_pb2_grpc.CanvasServiceStub(grpc_channel)
-    print(f"Gateway iniciado e conectado aos serviços.")
+    # 2. Conecta gRPC
+    logger.info(f"Conectando gRPC em: {CORE_TARGET}")
+    channel = grpc.aio.insecure_channel(CORE_TARGET)
+    stub = canvas_pb2_grpc.CanvasServiceStub(channel)
 
 @app.on_event("shutdown")
-async def shutdown_event():
-    # Fecha conexões ao desligar
+async def shutdown():
     if redis_client:
         await redis_client.close()
-    if grpc_channel:
-        await grpc_channel.close()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-
+    
     try:
-        # Pede estado inicial usando o STUB global
+        # Carga Inicial
         if stub:
-            response = await stub.GetCanvas(canvas_pb2.Empty())
-            await websocket.send_json({"type": "init", "data": dict(response.pixels)})
+            req = canvas_pb2.ViewportRequest(min_x=0, min_y=0, max_x=1000, max_y=1000)
+            response = await stub.GetCanvas(req)
+            
+            lista_pixels = [{"x": p.x, "y": p.y, "color": p.color} for p in response.pixels]
+            await websocket.send_json({"type": "init", "data": lista_pixels})
 
         while True:
             data = await websocket.receive_json()
-            
-            # Envia comando de pintura
             if stub:
-                await stub.PaintPixel(canvas_pb2.PixelRequest(
+                await stub.UpdatePixel(canvas_pb2.PixelUpdate(
                     x=data['x'], y=data['y'], color=data['color']
                 ))
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        print("Cliente desconectou")
+        await manager.broadcast_stats()
     except Exception as e:
+        logger.error(f"Erro no WebSocket: {e}")
         manager.disconnect(websocket)
-        print(f"Erro no WebSocket: {e}")
+        await manager.broadcast_stats()

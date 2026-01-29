@@ -17,7 +17,7 @@ class canvasService(canvas_pb2_grpc.CanvasServiceServicer):
         self.redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0,  decode_responses=True)
         print(f"Core conectado ao Redis em {REDIS_HOST}")
 
-    def PaintPixel(self, request, context):
+    def UpdatePixel(self, request, context):
         key = f"{request.x}:{request.y}"
 
         # Conecta no DB
@@ -28,13 +28,21 @@ class canvasService(canvas_pb2_grpc.CanvasServiceServicer):
         self.redis_client.publish("canvas_updates", msg)
 
         print(f"Pintou: {msg}")
-        return canvas_pb2.PaintPixelResponse(success=True)
+        return canvas_pb2.UpdateResponse(success=True)
     
     def GetCanvas(self, request, context):
         
         # Lê tudo do redis
         data = self.redis_client.hgetall("canvas_state")
-        return canvas_pb2.CanvasData(pixels=data)
+        
+        pixel_list = []
+        for key, color in data.items():
+            if ":" in key:
+                x, y = key.split(':')
+                p = canvas_pb2.Pixel(x=int(x), y=int(y), color=color)
+                pixel_list.append(p)
+            
+        return canvas_pb2.CanvasState(pixels=pixel_list)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
