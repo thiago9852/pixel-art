@@ -37,10 +37,9 @@ header h2 {
 
 .palette {
   display: flex;
-  gap: 10px;
-  background: #333;
-  padding: 5px 15px;
-  border-radius: 8px;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .palette div {
@@ -66,4 +65,11 @@ header h2 {
 
 .status span {
   opacity: 0.6;
+}
+
+@media screen and (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 15px;
+  }
 }

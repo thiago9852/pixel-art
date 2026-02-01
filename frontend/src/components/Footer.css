@@ -30,3 +30,10 @@ footer {
     text-decoration: none;
     font-weight: bold;
 }
+
+@media screen and (max-width: 768px) {
+    footer {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

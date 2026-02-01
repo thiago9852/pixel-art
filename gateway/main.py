@@ -19,7 +19,7 @@ app = FastAPI(title="Pixel Art Gateway")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,7 +87,7 @@ async def startup():
     global redis_client, stub
     logger.info("Iniciando Gateway...")
     
-    # 1. Conecta Redis
+    # Conecta Redis
     try:
         redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
         await redis_client.ping()
@@ -96,7 +96,7 @@ async def startup():
     except Exception as e:
         logger.critical(f"Falha ao conectar no Redis: {e}")
 
-    # 2. Conecta gRPC
+    # Conecta gRPC
     logger.info(f"Conectando gRPC em: {CORE_TARGET}")
     channel = grpc.aio.insecure_channel(CORE_TARGET)
     stub = canvas_pb2_grpc.CanvasServiceStub(channel)
