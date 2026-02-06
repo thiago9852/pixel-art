@@ -20,6 +20,21 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão da disciplina de Sis
 
 ---
 
+## 🛠️ Ferramentas e Tecnologias
+#### 1. Comunicação e Protocolos
+* gRPC (Protobuf): Utilizado para comunicação interna entre Gateway e Core. Garante baixa latência e tipagem estrita.
+* WebSockets: Mantém um canal aberto entre Frontend e Gateway para atualizações em tempo real (push).
+* Redis Pub/Sub: Atua como Message Broker, desacoplando quem salva (Core) de quem notifica (Gateway).
+#### 2. Backend
+* Python (FastAPI): No API Gateway, gerenciando conexões assíncronas.
+* Python (gRPC Server): No Core Service, contendo a lógica de negócios e acesso a dados.
+#### 3. Frontend
+* React + Vite: Interface do usuário.
+* Leaflet (React-Leaflet): Renderização do mapa base (CartoDB Light).
+* HTML5 Canvas: Camada de renderização gráfica otimizada sobreposta ao mapa.
+#### 4. Infraestrutura
+* Docker & Docker Compose: Orquestração de todo o ambiente (4 containers) com rede interna isolada.
+
 ### Definição do serviço gRPC (Protocol Buffers)
 Início da aplicação. O fluxo baseia-se no arquivo canvas.proto, que define o contrato de dados e serviços.
 
@@ -45,21 +60,6 @@ graph LR
     Redis -.-> UpdateEvento[Evento Update] -.-> Gateway
     Gateway -- Broadcast --> User
 ```
-
-## 🛠️ Ferramentas e Tecnologias
-#### 1. Comunicação e Protocolos
-* gRPC (Protobuf): Utilizado para comunicação interna entre Gateway e Core. Garante baixa latência e tipagem estrita.
-* WebSockets: Mantém um canal aberto entre Frontend e Gateway para atualizações em tempo real (push).
-* Redis Pub/Sub: Atua como Message Broker, desacoplando quem salva (Core) de quem notifica (Gateway).
-#### 2. Backend
-* Python (FastAPI): No API Gateway, gerenciando conexões assíncronas.
-* Python (gRPC Server): No Core Service, contendo a lógica de negócios e acesso a dados.
-#### 3. Frontend
-* React + Vite: Interface do usuário.
-* Leaflet (React-Leaflet): Renderização do mapa base (CartoDB Light).
-* HTML5 Canvas: Camada de renderização gráfica otimizada sobreposta ao mapa.
-#### 4. Infraestrutura
-* Docker & Docker Compose: Orquestração de todo o ambiente (4 containers) com rede interna isolada.
 
 ---
 
@@ -131,5 +131,6 @@ http://localhost:5173
 Projeto desenvolvido por [Thiago Dias Ferreira].
 * GitHub: [https://github.com/thiago9852]
 * LinkedIn: [https://www.linkedin.com/in/thiago-ferreira-54491a278/]
+
 
 
