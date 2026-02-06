@@ -14,9 +14,7 @@ message ViewportRequest {
   int32 max_y = 4;
 }
 
-message Empty {}
-
-message Pixel {
+message PixelUpdate {
   int32 x = 1;
   int32 y = 2;
   string color = 3;
@@ -26,13 +24,15 @@ message CanvasState {
   repeated Pixel pixels = 1;
 }
 
-message PixelUpdate {
-  int32 x = 1;
-  int32 y = 2;
-  string color = 3;
-}
-
 message UpdateResponse {
   bool success = 1;
   string message = 2;
+}
+
+message Empty {}
+
+message Pixel {
+  int32 x = 1;
+  int32 y = 2;
+  string color = 3;
 }
