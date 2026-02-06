@@ -20,6 +20,18 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão da disciplina de Sis
 
 ---
 
+### Definição do serviço gRPC (Protocol Buffers)
+Início da aplicação. O fluxo baseia-se no arquivo canvas.proto, que define o contrato de dados e serviços.
+
+* canvas_pb2.py (Dicionário de Dados):
+    * Função: Cuida da Serialização. Transforma objetos Python em binário extremamente compacto.
+
+* canvas_pb2_grpc.py (Infraestrutura de Rede):
+    * Stub (Cliente): Utilizado pelo Gateway para chamar funções remotas no Core como se fossem locais, gerenciando o túnel HTTP/2.
+    * Servicer (Servidor): Utilizado pelo Core como uma base pronta que "escuta" as requisições, restando apenas a implementação da lógica de negócio (escrita no Redis).
+
+---
+
 ## 🏗️ Arquitetura do Projeto
 
 O sistema foi desenhado para ser desacoplado e escalável. O fluxo de dados segue um padrão unidirecional para escrita e *broadcast* para leitura.
@@ -119,3 +131,5 @@ http://localhost:5173
 Projeto desenvolvido por [Thiago Dias Ferreira].
 * GitHub: [https://github.com/thiago9852]
 * LinkedIn: [https://www.linkedin.com/in/thiago-ferreira-54491a278/]
+
+
