@@ -38,13 +38,13 @@ function App() {
     const socket = new WebSocket('ws://localhost:8000/ws');
     socket.onopen = () => console.log("WS Conectado!");
     
-    socket.onmessage = (event) => {
+    socket.onmessage = (event) => { // Recebe mensagens do servidor via WebSocket
       const msg = JSON.parse(event.data);
       if (msg.type === "stats") {
         setOnlineCount(msg.online);
       } else if (msg.type === "init") {
-        msg.data.forEach(p => pixelsRef.current[`${p.x}:${p.y}`] = p.color);
-        window.dispatchEvent(new Event('pixels-updated'));
+        msg.data.forEach(p => pixelsRef.current[`${p.x}:${p.y}`] = p.color); // att ref
+        window.dispatchEvent(new Event('pixels-updated')); // redesenha
       } else {
         pixelsRef.current[`${msg.x}:${msg.y}`] = msg.color;
         window.dispatchEvent(new Event('pixels-updated'));
@@ -60,7 +60,7 @@ function App() {
     const x = Math.floor(lng * GRID_SCALE);
     const y = Math.floor(lat * GRID_SCALE);
     if (pixelsRef.current[`${x}:${y}`] === selectedColor) return;
-    ws.send(JSON.stringify({ x, y, color: selectedColor }));
+    ws.send(JSON.stringify({ x, y, color: selectedColor })); {/* Send pixel data via WebSocket */}
     pixelsRef.current[`${x}:${y}`] = selectedColor;
     window.dispatchEvent(new Event('pixels-updated'));
   };

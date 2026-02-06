@@ -66,6 +66,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+
 async def redis_listener():
     try:
         pubsub = redis_client.pubsub()
@@ -75,7 +76,7 @@ async def redis_listener():
         while True:
             msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
             if msg and msg['type'] == 'message':
-                await manager.broadcast(msg['data'])
+                await manager.broadcast(msg['data']) # Envia para todos WS
             await asyncio.sleep(0.01)
     except asyncio.CancelledError:
         logger.info("Redis listener desligado.")
@@ -120,11 +121,11 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json({"type": "init", "data": lista_pixels})
 
         while True:
-            data = await websocket.receive_json()
+            data = await websocket.receive_json() # Recebe dados do cliente
             if stub:
                 await stub.UpdatePixel(canvas_pb2.PixelUpdate(
                     x=data['x'], y=data['y'], color=data['color']
-                ))
+                )) # Chamada gRPC para atualizar pixel
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)

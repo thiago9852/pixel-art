@@ -20,12 +20,11 @@ class canvasService(canvas_pb2_grpc.CanvasServiceServicer):
     def UpdatePixel(self, request, context):
         key = f"{request.x}:{request.y}"
 
-        # Conecta no DB
+        # Persistência no Redis
         self.redis_client.hset("canvas_state", key, request.color)
 
-        # Avisa o Gateway sobre a atualização
         msg = json.dumps({"x": request.x, "y": request.y, "color": request.color})
-        self.redis_client.publish("canvas_updates", msg)
+        self.redis_client.publish("canvas_updates", msg) # Notificação (pub/sub)
 
         print(f"Pintou: {msg}")
         return canvas_pb2.UpdateResponse(success=True)
