@@ -20,7 +20,7 @@ Este projeto foi desenvolvido como **Trabalho de Conclusão da disciplina de Sis
 
 ---
 
-### Comunicação gRPC (Protocol Buffers)
+### Definição do serviço gRPC (Protocol Buffers)
 Início da aplicação. O fluxo baseia-se no arquivo canvas.proto, que define o contrato de dados e serviços.
 
 * canvas_pb2.py (Dicionário de Dados):
@@ -131,4 +131,5 @@ http://localhost:5173
 Projeto desenvolvido por [Thiago Dias Ferreira].
 * GitHub: [https://github.com/thiago9852]
 * LinkedIn: [https://www.linkedin.com/in/thiago-ferreira-54491a278/]
+
 
